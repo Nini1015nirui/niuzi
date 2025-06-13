@@ -1,0 +1,32 @@
+# Dataset contents (keep folders, exclude files)
+dummy_ade20k/images/
+dummy_ade20k/annotations/
+dummy_ade20k_small/images/
+dummy_ade20k_small/annotations/
+dummy_ade20k_tiny/images/
+dummy_ade20k_tiny/annotations/
+dummy_coco/images/
+dummy_coco/annotations/
+dummy_imagenet/train/
+dummy_imagenet/val/
+
+# Training outputs
+*/work_dirs/*/20*/
+*/work_dirs/*/*.pth
+*/work_dirs/*/*.log
+*/work_dirs/*/test_results/
+
+# IDE files
+.idea/
+.vscode/
+*.pyc
+__pycache__/
+
+# Model checkpoints
+*.pth
+
+# Build files
+kernels/*/build/
+kernels/*/dist/
+kernels/*/*.egg-info/
+kernels/*/*.so
