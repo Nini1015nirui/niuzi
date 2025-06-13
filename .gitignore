@@ -1,14 +1,17 @@
 # Dataset contents (keep folders, exclude files)
-dummy_ade20k/images/
-dummy_ade20k/annotations/
-dummy_ade20k_small/images/
-dummy_ade20k_small/annotations/
-dummy_ade20k_tiny/images/
-dummy_ade20k_tiny/annotations/
-dummy_coco/images/
-dummy_coco/annotations/
-dummy_imagenet/train/
-dummy_imagenet/val/
+dummy_ade20k/images/**/*
+dummy_ade20k/annotations/**/*
+dummy_ade20k_small/images/**/*
+dummy_ade20k_small/annotations/**/*
+dummy_ade20k_tiny/images/**/*
+dummy_ade20k_tiny/annotations/**/*
+dummy_coco/images/**/*
+dummy_coco/annotations/**/*
+dummy_imagenet/train/**/*
+dummy_imagenet/val/**/*
+
+# Keep .gitkeep files to preserve empty folder structure
+!**/.gitkeep
 
 # Training outputs
 */work_dirs/*/20*/
@@ -30,3 +33,38 @@ kernels/*/build/
 kernels/*/dist/
 kernels/*/*.egg-info/
 kernels/*/*.so
+
+# Additional files that might be missed
+*.log
+*.tmp
+*.temp
+*~
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.orig
+*.rej
+
+# Python data files
+*.pkl
+*.pickle
+*.npy
+*.npz
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Coverage and profiling
+.coverage
+*.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+*.prof
