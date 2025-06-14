@@ -10,6 +10,9 @@ dummy_coco/annotations/**/*
 dummy_imagenet/train/**/*
 dummy_imagenet/val/**/*
 
+# Custom dataset files
+my_custom_dataset/
+
 # Keep .gitkeep files to preserve empty folder structure
 !**/.gitkeep
 
@@ -18,6 +21,9 @@ dummy_imagenet/val/**/*
 */work_dirs/*/*.pth
 */work_dirs/*/*.log
 */work_dirs/*/test_results/
+segmentation/work_dirs/
+detection/work_dirs/
+classification/work_dirs/
 
 # IDE files
 .idea/

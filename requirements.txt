@@ -1,4 +1,4 @@
-# Spatial-Mamba 完整环境依赖
+ # Spatial-Mamba 完整环境依赖
 # 基于niuzi环境成功运行所有功能模块后生成的完整版本
 
 # =====================================================
@@ -162,6 +162,111 @@ idna==3.4
 absl-py==2.3.0
 
 # =====================================================
+# 数据库和缓存
+# =====================================================
+pycocotools==2.0.10
+
+# =====================================================
+# 字符串和文本处理
+# =====================================================
+charset-normalizer==2.1.1
+idna==3.4
+ftfy==6.3.1
+regex==2024.11.6
+
+# =====================================================
+# 异步和并发
+# =====================================================
+grpcio==1.73.0
+absl-py==2.3.0
+
+# =====================================================
+# 调试和监控工具
+# =====================================================
+fvcore==0.1.5.post20221221
+tensorboard==2.19.0
+tensorboard-data-server==0.7.2
+
+# =====================================================
+# 配置管理和序列化
+# =====================================================
+yacs==0.1.8
+protobuf==6.31.1
+
+# =====================================================
+# 系统和平台工具
+# =====================================================
+iopath==0.1.10
+portalocker==3.1.1
+filelock==3.13.1
+
+# =====================================================
+# 数学和科学计算扩展
+# =====================================================
+sympy==1.13.3
+networkx==3.3
+mpmath==1.3.0
+
+# =====================================================
+# 模板和标记语言
+# =====================================================
+Jinja2==3.1.4
+MarkupSafe==2.1.5
+Markdown==3.8
+
+# =====================================================
+# 开发工具和元数据
+# =====================================================
+model-index==0.1.11
+modelindex==0.0.2
+importlib_metadata==8.7.0
+zipp==3.23.0
+lit==15.0.7
+
+# =====================================================
+# 数据格式和表格
+# =====================================================
+tabulate==0.9.0
+ordered-set==4.1.0
+
+# =====================================================
+# 时间和日期处理
+# =====================================================
+pytz==2025.2
+tzdata==2025.2
+
+# =====================================================
+# Web和服务器框架
+# =====================================================
+Werkzeug==3.1.3
+certifi==2022.12.7
+urllib3==1.26.13
+
+# =====================================================
+# 数据分析和可视化
+# =====================================================
+pandas==2.3.0
+seaborn==0.13.2
+
+# =====================================================
+# 构建工具扩展
+# =====================================================
+cmake==3.25.0
+Cython==3.1.2
+wheel==0.45.1
+pip==25.1
+
+# =====================================================
+# 编译和加速库
+# =====================================================
+triton==2.0.0
+
+# =====================================================
+# 材料科学和数据格式
+# =====================================================
+mat4py==0.6.0
+
+# =====================================================
 # 自定义内核 (需要从源码手动安装)
 # =====================================================
 # IMPORTANT: 这些包需要手动安装，不能通过pip直接安装
@@ -170,17 +275,49 @@ absl-py==2.3.0
 # cd kernels/dwconv2d && python setup.py install --user
 # 
 # 安装后会有以下包（已在niuzi环境中验证）：
-selective_scan_rh==0.0.0
-dwconv2d==0.0.0
+# selective_scan_rh==0.0.0  (自定义选择性扫描内核)
+# dwconv2d==0.0.0           (深度卷积2D内核)
 
 # =====================================================
 # 完整安装指南
 # =====================================================
-# 1. 创建conda环境: conda create -n spatial-mamba python=3.10
-# 2. 激活环境: conda activate spatial-mamba
-# 3. 安装PyTorch: pip install torch==2.0.1+cu117 torchvision==0.15.2+cu117 --index-url https://download.pytorch.org/whl/cu117
-# 4. 安装其他依赖: pip install -r requirements.txt
-# 5. 安装自定义内核:
+# 
+# 基于niuzi环境成功验证的完整安装流程：
+# 
+# 1. 创建conda环境:
+#    conda create -n spatial-mamba python=3.10.18
+#    conda activate spatial-mamba
+# 
+# 2. 安装CUDA和PyTorch (CUDA 11.7):
+#    pip install torch==2.0.1+cu117 torchvision==0.15.2+cu117 torchaudio==2.0.2+cu117 \
+#                --index-url https://download.pytorch.org/whl/cu117
+# 
+# 3. 安装OpenMMLab生态系统:
+#    pip install mmengine==0.10.7 mmcv==2.1.0 mmdet==3.3.0 mmsegmentation==1.2.2
+# 
+# 4. 安装其他依赖:
+#    pip install -r requirements.txt
+# 
+# 5. 安装自定义CUDA内核 (关键步骤):
 #    cd kernels/selective_scan && pip install -e .
-#    cd kernels/dwconv2d && python setup.py install --user
-# 6. 验证安装: python -c "import torch, mmcv, mmdet, mmsegmentation; print('All packages installed successfully')"
+#    cd ../../kernels/dwconv2d && python setup.py install --user
+# 
+# 6. 验证安装:
+#    python -c "import torch, mmcv, mmdet, mmsegmentation; print('PyTorch version:', torch.__version__)"
+#    python -c "import model; print('Spatial-Mamba model imported successfully')"
+# 
+# 7. 测试功能模块:
+#    # 分类任务
+#    cd classification && python main.py --config configs/spatialmamba/spatialmamba_tiny.yaml
+#    
+#    # 检测任务  
+#    cd detection && python tools/train.py configs/spatialmamba/mask_rcnn_spatialmamba_fpn_coco_tiny.py
+#    
+#    # 分割任务
+#    cd segmentation && python tools/train.py configs/spatialmamba/upernet_spatialmamba_4xb4-160k_ade20k-512x512_tiny.py
+# 
+# 注意事项:
+# - 需要NVIDIA GPU和CUDA 11.7支持
+# - 总共88个包，完整环境大约需要8GB存储空间
+# - 自定义内核编译需要gcc和nvcc环境
+# - 所有功能已在Ubuntu 22.04 + RTX 4060环境验证成功
