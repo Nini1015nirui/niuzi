@@ -11,6 +11,7 @@ from mmengine.runner import Runner
 from mmseg.registry import RUNNERS
 
 import model
+import datasets
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a segmentor')
