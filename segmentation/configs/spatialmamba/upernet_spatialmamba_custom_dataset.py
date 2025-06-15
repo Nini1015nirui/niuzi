@@ -16,7 +16,13 @@ model = dict(
         _delete_=True,  # 删除原有backbone配置
         type='MM_SpatialMamba',
         out_indices=(0, 1, 2, 3),
-        pretrained="",  # 预训练权重路径，留空表示随机初始化
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint='pretrained_weights/upernet_spatialmamba_4xb4-160k_ade20k-512x512_tiny_iter_144000.pth',
+            prefix='backbone.',  # 🔧 仅加载backbone部分，完全忽略分割头
+            strict=False,  # 允许部分权重不匹配（分割头不加载）
+            map_location='cpu',  # 避免内存问题
+        ),  # 仅使用Spatial-Mamba backbone的预训练权重
         
         # 模型尺寸配置（可选择：tiny, small, base）
         dims=64,        # tiny: 64, small: 96, base: 128
@@ -30,6 +36,7 @@ model = dict(
         in_channels=[64, 128, 256, 512],  # 对应backbone输出通道
         num_classes=1,  # 🔥 二分类分割：单通道输出 + sigmoid
         threshold=0.5,  # 🔧 显式指定二分类阈值
+        init_cfg=dict(type='Normal', std=0.01),  # 🆕 分类头随机初始化
         loss_decode=dict(
             type='CrossEntropyLoss',
             use_sigmoid=True,  # 🔧 二分类使用sigmoid激活
@@ -42,6 +49,7 @@ model = dict(
         in_channels=256,
         num_classes=1,  # 🔥 与decode_head保持一致
         threshold=0.5,  # 🔧 显式指定二分类阈值
+        init_cfg=dict(type='Normal', std=0.01),  # 🆕 辅助头随机初始化
         loss_decode=dict(
             type='CrossEntropyLoss',
             use_sigmoid=True,  # 🔧 二分类使用sigmoid激活

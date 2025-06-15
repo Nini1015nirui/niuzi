@@ -10,8 +10,8 @@ dataset_type = 'ADE20KDataset'
 data_root = '../my_custom_dataset'  # 从segmentation目录的相对路径
 crop_size = (512, 512)
 
-# 🔧 关键修复：顶层加载预训练权重
-load_from = 'pretrained_weights/upernet_spatialmamba_4xb4-160k_ade20k-512x512_tiny_iter_144000.pth'
+# 🔧 关键修复：仅在backbone中加载预训练权重，分类头随机初始化
+# load_from = 'pretrained_weights/upernet_spatialmamba_4xb4-160k_ade20k-512x512_tiny_iter_144000.pth'  # 禁用顶层加载
 
 # 模型配置
 model = dict(
@@ -27,15 +27,17 @@ model = dict(
         init_cfg=dict(
             type='Pretrained',
             checkpoint='pretrained_weights/upernet_spatialmamba_4xb4-160k_ade20k-512x512_tiny_iter_144000.pth',
-            prefix='backbone.',  # 只加载backbone部分，忽略分割头
-            strict=False,  # 🔧 关键修复：允许部分权重不匹配
-            # 使用Spatial-Mamba-T在ADE20K上的预训练权重，适配到ISIC2017二分类任务
+            prefix='backbone.',  # 🔧 仅加载backbone部分，完全忽略分割头
+            strict=False,  # 允许部分权重不匹配（分割头不加载）
+            map_location='cpu',  # 避免内存问题
+            # 仅使用Spatial-Mamba backbone的预训练权重，分类头从零开始训练
         ),
     ),
     decode_head=dict(
         in_channels=[64, 128, 256, 512],
         num_classes=1,  # 二分类分割推荐使用1个输出通道
         threshold=0.5,  # 🔧 显式指定二分类阈值
+        init_cfg=dict(type='Normal', std=0.01),  # 🆕 分类头随机初始化
         loss_decode=dict(
             type='CrossEntropyLoss',
             use_sigmoid=True,  # 二分类使用sigmoid
@@ -47,6 +49,7 @@ model = dict(
         in_channels=256,  # 来自backbone第3层的输出
         num_classes=1,
         threshold=0.5,  # 🔧 显式指定二分类阈值
+        init_cfg=dict(type='Normal', std=0.01),  # 🆕 辅助头随机初始化
         loss_decode=dict(
             type='CrossEntropyLoss',
             use_sigmoid=True,
