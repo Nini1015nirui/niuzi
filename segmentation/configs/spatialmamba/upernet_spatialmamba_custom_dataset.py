@@ -28,22 +28,22 @@ model = dict(
     # 解码头配置 - ISIC2017二分类分割
     decode_head=dict(
         in_channels=[64, 128, 256, 512],  # 对应backbone输出通道
-        num_classes=2,  # 🔥 ISIC2017二分类：背景(0) + 皮肤病变(1)
+        num_classes=1,  # 🔥 二分类分割：单通道输出 + sigmoid
         loss_decode=dict(
             type='CrossEntropyLoss',
-            use_sigmoid=False,  # 二分类使用标准交叉熵
-            class_weight=[1.0, 2.0],  # 病变类别权重更高
+            use_sigmoid=True,  # 🔧 二分类使用sigmoid激活
+            class_weight=[2.0],  # 病变类别权重
             avg_non_ignore=True
         )
     ),
     
     auxiliary_head=dict(
         in_channels=256,
-        num_classes=2,  # 🔥 与decode_head保持一致
+        num_classes=1,  # 🔥 与decode_head保持一致
         loss_decode=dict(
             type='CrossEntropyLoss',
-            use_sigmoid=False,
-            class_weight=[1.0, 2.0],
+            use_sigmoid=True,  # 🔧 二分类使用sigmoid激活
+            class_weight=[2.0],  # 病变类别权重
             avg_non_ignore=True
         )
     )
