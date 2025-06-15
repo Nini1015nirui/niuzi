@@ -5,9 +5,22 @@ _base_ = [
     '../_base_/schedules/schedule_160k.py'
 ]
 
+# 数据预处理器配置
+data_preprocessor = dict(
+    type='SegDataPreProcessor',
+    mean=[123.675, 116.28, 103.53],
+    std=[58.395, 57.12, 57.375],
+    bgr_to_rgb=True,
+    pad_val=0,
+    seg_pad_val=255,
+    size=(512, 512),  # 固定输入尺寸
+    size_divisor=None  # 不使用divisor
+)
+
 # 模型配置 - Spatial-Mamba Tiny + ISIC2017二分类
 model = dict(
     pretrained=None,  # 禁用ResNet50预训练权重
+    data_preprocessor=data_preprocessor,  # 添加数据预处理器
     backbone=dict(
         _delete_=True,  # 删除基础配置的backbone
         type='MM_SpatialMamba',
@@ -65,22 +78,17 @@ param_scheduler = [
     dict(type='PolyLR', eta_min=0.0, power=1.0, begin=1500, end=max_iters, by_epoch=False)
 ]
 
-# 优化器配置
+# 优化器配置 - 使用SGD避免配置冲突
+optimizer = dict(
+    type='SGD', 
+    lr=0.003,          # 适合医学图像的学习率
+    momentum=0.9, 
+    weight_decay=0.0005
+)
 optim_wrapper = dict(
-    type='OptimWrapper',
-    optimizer=dict(
-        type='AdamW',
-        lr=0.00003,        # 较小学习率适合医学图像
-        betas=(0.9, 0.999),
-        weight_decay=0.01
-    ),
-    paramwise_cfg=dict(
-        custom_keys={
-            'absolute_pos_embed': dict(decay_mult=0.),
-            'relative_position_bias_table': dict(decay_mult=0.),
-            'norm': dict(decay_mult=0.)
-        }
-    )
+    type='OptimWrapper', 
+    optimizer=optimizer, 
+    clip_grad=None
 )
 
 # 日志和检查点配置
