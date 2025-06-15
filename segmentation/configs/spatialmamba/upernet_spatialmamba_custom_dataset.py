@@ -25,23 +25,35 @@ model = dict(
         drop_path_rate=0.2,   # Drop path比率
     ),
     
-    # 解码头配置 - 需要根据你的类别数调整
+    # 解码头配置 - ISIC2017二分类分割
     decode_head=dict(
         in_channels=[64, 128, 256, 512],  # 对应backbone输出通道
-        num_classes=21,  # 🔥 关键：修改为你的类别数（包括背景）
+        num_classes=2,  # 🔥 ISIC2017二分类：背景(0) + 皮肤病变(1)
+        loss_decode=dict(
+            type='CrossEntropyLoss',
+            use_sigmoid=False,  # 二分类使用标准交叉熵
+            class_weight=[1.0, 2.0],  # 病变类别权重更高
+            avg_non_ignore=True
+        )
     ),
     
     auxiliary_head=dict(
         in_channels=256,
-        num_classes=21,  # 🔥 关键：与decode_head保持一致
+        num_classes=2,  # 🔥 与decode_head保持一致
+        loss_decode=dict(
+            type='CrossEntropyLoss',
+            use_sigmoid=False,
+            class_weight=[1.0, 2.0],
+            avg_non_ignore=True
+        )
     )
 )
 
 # =====================================================
 # 数据集配置覆盖
 # =====================================================
-# 如果你的数据集路径不同，在这里覆盖
-data_root = 'my_datasets/your_dataset_name'  # 🔥 修改为你的数据集路径
+# ISIC2017皮肤病变分割数据集路径
+data_root = '../my_custom_dataset'  # 🔥 ISIC2017数据集路径
 
 train_dataloader = dict(
     batch_size=2,  # 🔥 根据GPU内存调整（RTX 4060建议2-4）
@@ -120,29 +132,27 @@ default_hooks = dict(
 )
 
 # 工作目录
-work_dir = './work_dirs/custom_dataset_training'
+work_dir = './work_dirs/isic2017_spatialmamba_training'
 
 # =====================================================
 # 使用说明
 # =====================================================
 """
-使用此配置训练自定义数据集的步骤：
+ISIC2017皮肤病变分割训练配置
 
-1. 准备数据集（按照指定格式）
-2. 修改关键参数：
-   - data_root: 数据集路径
-   - num_classes: 类别数（包括背景）
-   - max_iters: 训练迭代数
-   - batch_size: 批量大小
-   - lr: 学习率
+数据集信息：
+- ISIC2017皮肤病变分割数据集
+- 2000张皮肤镜图像
+- 二分类任务：背景(0) + 皮肤病变(1)
+- 数据路径：../my_custom_dataset
 
-3. 开始训练：
+训练命令：
    cd segmentation
    python tools/train.py configs/spatialmamba/upernet_spatialmamba_custom_dataset.py
 
-4. 监控训练：
-   tensorboard --logdir work_dirs/custom_dataset_training
+监控训练：
+   tensorboard --logdir work_dirs/isic2017_spatialmamba_training
 
-5. 测试模型：
-   python tools/test.py configs/spatialmamba/upernet_spatialmamba_custom_dataset.py work_dirs/custom_dataset_training/latest.pth
+测试模型：
+   python tools/test.py configs/spatialmamba/upernet_spatialmamba_custom_dataset.py work_dirs/isic2017_spatialmamba_training/latest.pth
 """

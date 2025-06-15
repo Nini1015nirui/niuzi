@@ -74,3 +74,46 @@ htmlcov/
 .pytest_cache/
 .tox/
 *.prof
+
+# ==============================================
+# Additional Spatial-Mamba Project Excludes
+# ==============================================
+
+# 确保数据集完全排除
+my_custom_dataset/**
+ISIC2017/**
+**/ISIC2017/**
+
+# 确保训练输出完全排除
+**/work_dirs/**
+**/outputs/**
+**/runs/**
+**/logs/**
+
+# 确保预训练权重完全排除
+pretrained_weights/**
+**/pretrained_weights/**
+*.pth
+*.pt
+*.bin
+*.safetensors
+
+# 大文件媒体内容
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
+*.mp4
+*.avi
+*.mkv
+*.mov
+
+# 临时和缓存文件
+.cache/
+*.tmp
+*.temp
+*.backup
+*.bak

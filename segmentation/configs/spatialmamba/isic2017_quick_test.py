@@ -1,7 +1,6 @@
 # ISIC2017 皮肤病变分割配置 - Spatial-Mamba
 _base_ = [
     '../_base_/models/upernet_r50.py',
-    '../_base_/datasets/ade20k.py',
     '../_base_/default_runtime.py'
 ]
 
@@ -9,6 +8,66 @@ _base_ = [
 dataset_type = 'ADE20KDataset'
 data_root = '../my_custom_dataset'  # 从segmentation目录的相对路径
 crop_size = (512, 512)
+backend_args = None
+
+# 训练数据管道
+train_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadAnnotations', reduce_zero_label=False),
+    dict(
+        type='RandomResize',
+        scale=(1024, 1024),
+        ratio_range=(0.8, 1.2),
+        keep_ratio=True),
+    dict(type='RandomCrop', crop_size=crop_size, cat_max_ratio=0.75),
+    dict(type='RandomFlip', direction='horizontal', prob=0.5),
+    dict(type='RandomFlip', direction='vertical', prob=0.3),
+    dict(
+        type='PhotoMetricDistortion',
+        brightness_delta=16,
+        contrast_range=(0.9, 1.1),
+        saturation_range=(0.9, 1.1),
+        hue_delta=8),
+    dict(type='PackSegInputs')
+]
+
+# 测试数据管道
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='Resize', scale=(1024, 1024), keep_ratio=True),
+    dict(type='LoadAnnotations', reduce_zero_label=False),
+    dict(type='PackSegInputs')
+]
+
+# 训练数据集
+train_dataloader = dict(
+    batch_size=2,
+    num_workers=4,
+    persistent_workers=True,
+    sampler=dict(type='InfiniteSampler', shuffle=True),
+    dataset=dict(
+        type=dataset_type,
+        data_root=data_root,
+        data_prefix=dict(img_path='images/training', seg_map_path='annotations/training'),
+        pipeline=train_pipeline,
+        reduce_zero_label=False))
+
+# 验证数据集
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=4,
+    persistent_workers=True,
+    sampler=dict(type='DefaultSampler', shuffle=False),
+    dataset=dict(
+        type=dataset_type,
+        data_root=data_root,
+        data_prefix=dict(img_path='images/validation', seg_map_path='annotations/validation'),
+        pipeline=test_pipeline,
+        reduce_zero_label=False,
+        backend_args=backend_args))
+
+# 测试数据集
+test_dataloader = val_dataloader
 
 # 🔧 关键修复：顶层加载预训练权重
 load_from = 'pretrained_weights/upernet_spatialmamba_4xb4-160k_ade20k-512x512_tiny_iter_144000.pth'
@@ -124,17 +183,17 @@ val_dataloader = dict(
 test_dataloader = val_dataloader
 
 # 训练配置 (针对ISIC2017优化)
-max_iters = 80000  # 适合2000张医学图像的迭代数
+max_iters = 50  # 适合2000张医学图像的迭代数
 train_cfg = dict(
     type='IterBasedTrainLoop',
     max_iters=max_iters,
-    val_interval=1000  # 每1000次迭代验证
+    val_interval=10  # 每1000次迭代验证
 )
 
-# 学习率调度 (医学图像需要更稳定的学习率)
+# 学习率调度 (快速测试版本 - 短期训练)
 param_scheduler = [
-    dict(type='LinearLR', start_factor=1e-6, by_epoch=False, begin=0, end=1500),
-    dict(type='PolyLR', eta_min=0.0, power=1.0, begin=1500, end=max_iters, by_epoch=False)
+    dict(type='LinearLR', start_factor=1e-6, by_epoch=False, begin=0, end=5),
+    dict(type='PolyLR', eta_min=0.0, power=1.0, begin=5, end=max_iters, by_epoch=False)
 ]
 
 # 优化器配置
@@ -158,23 +217,37 @@ optim_wrapper = dict(
 # 评估指标 (二分类医学分割专用)
 val_evaluator = dict(
     type='IoUMetric',
-    iou_metrics=['mIoU', 'mDice'],  # 添加Dice系数
+    iou_metrics=['mIoU', 'mDice'],  # 只计算mIoU和mDice
     nan_to_num=0,
-    threshold=0.5  # 二分类阈值
+    threshold=0.5,  # 二分类阈值
+    collect_device='cpu',
+    prefix='',
+    format_only=False,
+    keep_results=False
 )
 test_evaluator = val_evaluator
+
+# 训练循环配置
+train_cfg = dict(
+    type='IterBasedTrainLoop',
+    max_iters=max_iters,
+    val_interval=10  # 每10次迭代验证
+)
+
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')
 
 # 日志和检查点配置
 default_hooks = dict(
     checkpoint=dict(
         type='CheckpointHook',
         by_epoch=False,
-        interval=2000,  # 每2000次迭代保存
+        interval=10,  # 每2000次迭代保存
         max_keep_ckpts=5
     ),
     logger=dict(
         type='LoggerHook',
-        interval=100,  # 每100次迭代打印日志
+        interval=10,  # 每100次迭代打印日志
         log_metric_by_epoch=False
     )
 )
@@ -183,7 +256,7 @@ default_hooks = dict(
 train_cfg = dict(
     type='IterBasedTrainLoop',
     max_iters=max_iters,
-    val_interval=1000
+    val_interval=10
 )
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
@@ -197,7 +270,7 @@ visualizer = dict(
 )
 
 # 工作目录
-work_dir = './work_dirs/isic2017_segmentation'
+work_dir = './work_dirs/isic2017_quick_test'
 
 # ISIC2017数据集信息注释
 """
