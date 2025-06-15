@@ -86,7 +86,7 @@ test_dataloader = val_dataloader
 val_evaluator = dict(
     type='IoUMetric',
     iou_metrics=['mIoU', 'mDice'],  # 添加Dice系数
-    threshold=0.5,  # 二分类阈值
+    threshold=0.3,  # 二分类阈值调整为0.3
     nan_to_num=0
 )
 test_evaluator = val_evaluator

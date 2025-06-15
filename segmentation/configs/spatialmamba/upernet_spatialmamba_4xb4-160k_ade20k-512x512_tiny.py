@@ -30,18 +30,18 @@ model = dict(
         depths=(2, 4, 8, 4),  # 各层深度
         drop_path_rate=0.1,   # Drop path比率
         recompute=True,       # 梯度检查点减少显存
-        init_cfg=dict(
-            type='Pretrained',
-            checkpoint='pretrained_weights/upernet_spatialmamba_4xb4-160k_ade20k-512x512_tiny_iter_144000.pth',
-            prefix='backbone.',      # 🔧 仅加载backbone权重
-            strict=False,           # 允许部分权重不匹配
-            map_location='cpu',     # 避免内存问题
-        ),
+        # init_cfg=dict(
+        #     type='Pretrained',
+        #     checkpoint='pretrained_weights/upernet_spatialmamba_4xb4-160k_ade20k-512x512_tiny_iter_144000.pth',
+        #     prefix='backbone.',      # 🐛 prefix导致key不匹配
+        #     strict=False,
+        #     map_location='cpu',
+        # ),
     ),
     decode_head=dict(
         in_channels=[64, 128, 256, 512],  # 对应Tiny backbone输出
         num_classes=1,                    # 🔥 二分类：单通道输出
-        threshold=0.5,                    # 🔧 显式二分类阈值
+        threshold=0.3,                    # 🔧 二分类阈值调整为0.3
         init_cfg=dict(type='Normal', std=0.01),  # 🆕 分类头随机初始化
         loss_decode=dict(
             type='CrossEntropyLoss',
@@ -53,7 +53,7 @@ model = dict(
     auxiliary_head=dict(
         in_channels=256,                  # 来自backbone第3层
         num_classes=1,                    # 🔥 与decode_head保持一致
-        threshold=0.5,                    # 🔧 显式二分类阈值
+        threshold=0.3,                    # 🔧 二分类阈值调整为0.3
         init_cfg=dict(type='Normal', std=0.01),  # 🆕 辅助头随机初始化
         loss_decode=dict(
             type='CrossEntropyLoss',
@@ -72,22 +72,23 @@ train_cfg = dict(
     val_interval=2000  # 每2000次迭代验证
 )
 
-# 学习率调度 (医学图像优化)
+# 学习率调度 (AdamW + warmup 500 + poly decay)
 param_scheduler = [
-    dict(type='LinearLR', start_factor=1e-6, by_epoch=False, begin=0, end=1500),
-    dict(type='PolyLR', eta_min=0.0, power=1.0, begin=1500, end=max_iters, by_epoch=False)
+    dict(type='LinearLR', start_factor=1e-6, by_epoch=False, begin=0, end=500),  # warmup 500次迭代
+    dict(type='PolyLR', eta_min=0.0, power=1.0, begin=500, end=max_iters, by_epoch=False)  # poly衰减
 ]
 
-# 优化器配置 - 使用SGD避免配置冲突
+# 优化器配置 - AdamW优化器
 optimizer = dict(
-    type='SGD', 
-    lr=0.003,          # 适合医学图像的学习率
-    momentum=0.9, 
-    weight_decay=0.0005
+    type='AdamW',
+    lr=1e-4,           # 学习率 1e-4
+    weight_decay=1e-4,  # 权重衰减 1e-4
+    betas=(0.9, 0.999),
+    eps=1e-8
 )
 optim_wrapper = dict(
-    type='OptimWrapper', 
-    optimizer=optimizer, 
+    type='OptimWrapper',
+    optimizer=optimizer,
     clip_grad=None
 )
 
@@ -105,6 +106,9 @@ default_hooks = dict(
         log_metric_by_epoch=False
     )
 )
+
+# 预训练权重加载
+load_from = 'pretrained_weights/upernet_spatialmamba_4xb4-160k_ade20k-512x512_tiny_iter_144000.pth'
 
 # 工作目录
 work_dir = './work_dirs/upernet_spatialmamba_tiny_isic2017'
