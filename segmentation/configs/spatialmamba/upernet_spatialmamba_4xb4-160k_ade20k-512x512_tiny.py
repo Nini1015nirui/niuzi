@@ -1,8 +1,7 @@
 _base_ = [
     '../_base_/models/upernet_r50.py',
     '../_base_/datasets/isic2017.py',  # 🔧 使用ISIC2017数据集配置
-    '../_base_/default_runtime.py',
-    '../_base_/schedules/schedule_160k.py'
+    '../_base_/default_runtime.py'
 ]
 
 # 数据预处理器配置
@@ -71,6 +70,8 @@ train_cfg = dict(
     max_iters=max_iters,
     val_interval=2000  # 每2000次迭代验证
 )
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')
 
 # 学习率调度 (AdamW + warmup 500 + poly decay)
 param_scheduler = [
@@ -78,7 +79,7 @@ param_scheduler = [
     dict(type='PolyLR', eta_min=0.0, power=1.0, begin=500, end=max_iters, by_epoch=False)  # poly衰减
 ]
 
-# 优化器配置 - AdamW优化器
+# 优化器配置 - AdamW优化器，覆盖基类的SGD
 optimizer = dict(
     type='AdamW',
     lr=1e-4,           # 学习率 1e-4
